@@ -1,0 +1,120 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Age aggregator",
+        "description": "A REST-ish CRUD API for the sake of learning",
+        "version": "0.1.0"
+    },
+    "servers": [
+        {
+            "url": "localhost:6000",
+            "description": "The dev's lair"
+        }
+    ],
+    "paths": {
+        "/persons": {
+            "get": {
+                "summary": "Return the list of all registered persons",
+                "responses": {
+                    "200": {
+                        "description": "A JSON array of persons",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/FullPerson"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Post a Person to add to the user's family",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Person"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns the registered person",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullPerson"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "Identifier": {
+                "title": "Identifier",
+                "type": "integer",
+                "example": 5,
+                "description": "An id attributed by the database"
+            },
+            "Person": {
+                "title": "Person",
+                "description": "A member of the user's family, with birthdate in POSIX seconds",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Oncle Jim"
+                    },
+                    "birthdate": {
+                        "type": "integer",
+                        "example": -447399150
+                    }
+                }
+            },
+            "FullPerson": {
+                "title": "FullPerson",
+                "description": "A full Person object, with id",
+                "allOf": [
+                    { "$ref": "#/components/schemas/Person" },
+                    { "$ref": "#/components/schemas/Identifier" }
+                ]
+            }
+        }
+    }
+}
