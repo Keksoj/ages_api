@@ -67,7 +67,6 @@ impl From<serde_json::error::Error> for CustomError {
 //     }
 // }
 
-
 impl ResponseError for CustomError {
     fn error_response(&self) -> HttpResponse {
         let status_code = match StatusCode::from_u16(self.error_status_code) {

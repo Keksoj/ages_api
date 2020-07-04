@@ -1,44 +1,23 @@
 use crate::{
     config::db::connection,
-    jwt::user_token::UserToken,
     models::person::{Person, ReceivedPerson},
-    toolbox::{errors::CustomError, response::ResponseBody},
+    toolbox::{errors::CustomError, uid_extractor::get_uid_from_request},
 };
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 use serde_json::json;
 
 // GET HOST/persons
 pub async fn find_all(request: HttpRequest) -> Result<HttpResponse, CustomError> {
-    // parsing the user token to find the user id
-    // should be done in the middleware, the user id should be accessible anywhere
-    let authen_header = match request.headers().get("Authorization") {
-        Some(authen_header) => authen_header,
-        None => {
-            return Ok(HttpResponse::BadRequest()
-                .json(ResponseBody::new("Something went very wrong", "")));
-            // because the middleware should have checked this already
-        }
-    };
-    let authen_str = authen_header.to_str()?;
-    if !authen_str.starts_with("bearer") {
-        return Err(CustomError::new(
-            500,
-            "The authentication header doesn't start with 'bearer'".to_string(),
-        ));
-    }
-    let token = authen_str[6..authen_str.len()].trim();
-    let token_data = UserToken::decode_token(token.to_string())?;
+    let uid = get_uid_from_request(&request)?;
     let conn = connection()?;
-    let user_id = UserToken::get_user_id(&token_data, &conn)?;
-
-    let persons = Person::find_all(user_id, &conn)?;
+    let persons = Person::find_all(uid, &conn)?;
     Ok(HttpResponse::Ok().json(persons))
 }
 
 // GET HOST/{id}
-pub async fn find(id: web::Path<i32>) -> Result<HttpResponse, CustomError> {
+pub async fn find(person_id: web::Path<i32>) -> Result<HttpResponse, CustomError> {
     let conn = connection()?;
-    let person = Person::find_by_id(id.into_inner(), &conn)?;
+    let person = Person::find_by_id(person_id.into_inner(), &conn)?;
     Ok(HttpResponse::Ok().json(person))
 }
 
@@ -60,9 +39,8 @@ pub async fn create(
     Ok(HttpResponse::Ok().json(response_data))
 }
 
-// PUT HOST/persons/{id}
+// PUT HOST/persons/
 pub async fn update(
-    id: web::Path<i32>,
     query_content: web::Json<Person>,
 ) -> Result<HttpResponse, CustomError> {
     info!(
@@ -77,8 +55,7 @@ pub async fn update(
         user_id: cloned_content.user_id,
     };
     let conn = connection()?;
-
-    let todo = Person::update(updated_person, id.into_inner(), &conn)?;
+    let todo = Person::update(updated_person, cloned_content.id, &conn)?;
     Ok(HttpResponse::Ok().json(todo))
 }
 

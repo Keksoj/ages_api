@@ -1,8 +1,7 @@
-use actix_web::{HttpResponse, http};
+use actix_web;
 
-
-pub async fn ping() -> HttpResponse {
-    let http_response = HttpResponse::Ok().body("pong!".to_string());
+pub async fn ping() -> actix_web::HttpResponse {
+    let http_response = actix_web::HttpResponse::Ok().body("pong!".to_string());
     println!("This is a simple http response: {:?}", http_response);
     http_response
 }
@@ -15,7 +14,6 @@ mod test {
     #[actix_rt::test]
     async fn ping_is_ok() {
         let ping_response = ping().await;
-        assert_eq!(ping_response.status(), http::StatusCode::OK);
+        assert_eq!(ping_response.status(), actix_web::http::StatusCode::OK);
     }
-
 }

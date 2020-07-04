@@ -1,6 +1,5 @@
 use crate::{
-    config::{db, routes},
-
+    config::routes,
     jwt::user_token::UserToken,
     // ::{decode_token, verify_token},
     toolbox::response::ResponseBody,
@@ -22,7 +21,6 @@ use futures::{
 };
 
 use std::{
-    fmt,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -31,11 +29,7 @@ pub struct Authentication;
 
 impl<S, B> Transform<S> for Authentication
 where
-    S: Service<
-        Request = ServiceRequest,
-        Response = ServiceResponse<B>,
-        Error = Error,
-    >,
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
@@ -57,24 +51,16 @@ pub struct AuthenticationMiddleware<S> {
 
 impl<S, B> Service for AuthenticationMiddleware<S>
 where
-    S: Service<
-        Request = ServiceRequest,
-        Response = ServiceResponse<B>,
-        Error = Error,
-    >,
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future =
-        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(
-        &mut self,
-        ctx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(ctx)
     }
 
@@ -99,9 +85,7 @@ where
         // allow /auth/login and /auth/signup
         for ignore_route in routes::IGNORE_ROUTES.iter() {
             if request.path().starts_with(ignore_route) {
-                debug!(
-                    "The request path is in the ignored routes! It's a pass."
-                );
+                debug!("The request path is in the ignored routes! It's a pass.");
                 let future = self.service.call(request);
                 return Box::pin(async move {
                     let response = future.await?;
@@ -155,7 +139,7 @@ where
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
                         .json(ResponseBody::new(
-                            "The authorization header doesn't start with bearer",
+                            "The authorization header doesn't start with 'bearer'",
                             "",
                         ))
                         .into_body(),
@@ -183,26 +167,28 @@ where
             }
         };
 
-        debug!("Connecting to the database");
-        let conn = match db::connection() {
-            Ok(conn) => conn,
-            Err(_) => {
-                return Box::pin(async move {
-                    Ok(request.into_response(
-                        HttpResponse::Unauthorized()
-                            .json(ResponseBody::new(
-                                "Could not connect to the database",
-                                "",
-                            ))
-                            .into_body(),
-                    ))
-                });
-            }
-        };
+        // no access to the database is needed for JWT authentication!
+        // debug!("Connecting to the database");
+        // let conn = match db::connection() {
+        //     Ok(conn) => conn,
+        //     Err(_) => {
+        //         return Box::pin(async move {
+        //             Ok(request.into_response(
+        //                 HttpResponse::Unauthorized()
+        //                     .json(ResponseBody::new(
+        //                         "Could not connect to the database",
+        //                         "",
+        //                     ))
+        //                     .into_body(),
+        //             ))
+        //         });
+        //     }
+        // };
 
-        if UserToken::token_is_still_valid(&token_data) {
+        if UserToken::is_still_valid(&token_data) {
             debug!("The JWT token is still valid, it's a pass");
             let future = self.service.call(request);
+
             return Box::pin(async move {
                 let response = future.await?;
                 Ok(response)
@@ -212,10 +198,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json(ResponseBody::new(
-                            "The JWT token isn't valid anymore",
-                            "",
-                        ))
+                        .json(ResponseBody::new("The JWT token isn't valid anymore", ""))
                         .into_body(),
                 ))
             });

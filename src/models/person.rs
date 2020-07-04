@@ -5,9 +5,7 @@ use crate::schema::persons;
 use crate::toolbox::errors::CustomError;
 use serde::{Deserialize, Serialize};
 
-#[derive(
-    Serialize, Deserialize, AsChangeset, Insertable, Queryable, Clone, Debug,
-)]
+#[derive(Serialize, Deserialize, AsChangeset, Insertable, Queryable, Clone, Debug)]
 #[table_name = "persons"]
 pub struct Person {
     pub id: i32,
@@ -17,21 +15,17 @@ pub struct Person {
 }
 
 impl Person {
-    pub fn find_all(
-        user_id: i32,
-        conn: &DbConnection,
-    ) -> Result<Vec<Self>, CustomError> {
+    pub fn find_all(user_id: i32, conn: &DbConnection) -> Result<Vec<Self>, CustomError> {
         let persons = persons::table
             .filter(persons::user_id.eq(user_id))
             .get_results(conn)?;
         Ok(persons)
     }
 
-    pub fn find_by_id(
-        item_id: i32,
-        conn: &DbConnection,
-    ) -> Result<Self, CustomError> {
-        let person = persons::table.filter(persons::id.eq(item_id)).first(conn)?;
+    pub fn find_by_id(person_id: i32, conn: &DbConnection) -> Result<Self, CustomError> {
+        let person = persons::table
+            .filter(persons::id.eq(person_id))
+            .first(conn)?;
         Ok(person)
     }
 
@@ -52,24 +46,31 @@ impl Person {
 
     pub fn update(
         person_to_update: Person,
-        item_id: i32,
+        person_id: i32,
         conn: &DbConnection,
     ) -> Result<Self, CustomError> {
         let person = diesel::update(persons::table)
-            .filter(persons::id.eq(item_id))
+            .filter(persons::id.eq(person_id))
             .set(person_to_update)
             .get_result(conn)?;
         Ok(person)
     }
-    pub fn delete(id: i32, conn: &DbConnection) -> Result<usize, CustomError> {
-        let response = diesel::delete(persons::table.find(id)).execute(conn)?;
+    pub fn delete(person_id: i32, conn: &DbConnection) -> Result<usize, CustomError> {
+        let response = diesel::delete(persons::table.find(person_id)).execute(conn)?;
         Ok(response)
+    }
+    pub fn delete_all_wit_uid(
+        user_id: i32,
+        conn: &DbConnection,
+    ) -> Result<usize, CustomError> {
+        let number_of_deleted_persons = diesel::delete(persons::table)
+            .filter(persons::user_id.eq(user_id))
+            .execute(conn)?;
+        Ok(number_of_deleted_persons)
     }
 }
 
-#[derive(
-    Serialize, Deserialize, AsChangeset, Insertable, Queryable, Clone, Debug,
-)]
+#[derive(Serialize, Deserialize, AsChangeset, Insertable, Queryable, Clone, Debug)]
 #[table_name = "persons"]
 pub struct ReceivedPerson {
     pub name: String,
