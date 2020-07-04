@@ -60,6 +60,7 @@ impl From<serde_json::error::Error> for CustomError {
         CustomError::new(500, error.to_string())
     }
 }
+
 // impl From<NoneError> for CustomError {
 //     fn from(error: NoneError) -> CustomError {
 //         CustomError::new(500, error)
@@ -74,10 +75,12 @@ impl ResponseError for CustomError {
             Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
-        let error_message = match status_code.as_u16() < 500 {
-            true => self.error_message.clone(),
-            false => "Internal server error".to_string(),
-        };
+        // this filters error messages under 500
+        // let error_message = match status_code.as_u16() < 500 {
+        //     true => self.error_message.clone(),
+        //     false => "Internal server error".to_string(),
+        // };
+        let error_message = &self.error_message;
 
         HttpResponse::build(status_code).json(json!({ "message": error_message }))
     }

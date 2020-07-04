@@ -28,4 +28,4 @@ pub fn config_services(cfg: &mut ServiceConfig) {
     );
 }
 
-pub const IGNORE_ROUTES: [&str; 2] = ["/auth/signup", "/auth/login"];
+pub const IGNORE_ROUTES: [&str; 3] = ["/auth/signup", "/auth/login", "/ping"];

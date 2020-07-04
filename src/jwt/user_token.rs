@@ -1,7 +1,5 @@
 use crate::{
-    config::db::DbConnection,
-    models::user::{LoginInfoDTO, User},
-    toolbox::errors::CustomError,
+    config::db::DbConnection, models::user::User, toolbox::errors::CustomError,
 };
 use chrono::Utc;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, TokenData, Validation};
@@ -19,13 +17,16 @@ pub struct UserToken {
 }
 
 impl UserToken {
-    pub fn generate_token(login: LoginInfoDTO) -> Result<String, CustomError> {
+    pub fn generate_token(
+        username: &str,
+        login_session: &str,
+    ) -> Result<String, CustomError> {
         let now = Utc::now().timestamp_millis() / 1000; //seconds
         let payload = UserToken {
             iat: now,
             exp: now + ONE_WEEK,
-            user: login.username,
-            login_session: login.login_session,
+            user: username.to_string(),
+            login_session: login_session.to_string(),
         };
         let jwt = jsonwebtoken::encode(
             &Header::default(),
@@ -34,6 +35,7 @@ impl UserToken {
         )?;
         Ok(jwt)
     }
+
     pub fn decode_token(
         token: String,
     ) -> jsonwebtoken::errors::Result<TokenData<Self>> {
@@ -43,20 +45,38 @@ impl UserToken {
             &Validation::default(),
         )
     }
-    pub fn verify_token(
+
+    pub fn token_is_still_valid(
         token_data: &TokenData<Self>,
-        conn: &DbConnection,
-    ) -> Result<String, String> {
-        if User::is_valid_login_session(&token_data.claims, conn) {
-            Ok(token_data.claims.user.to_string())
+        // conn: &DbConnection,
+    ) -> bool {
+        let now = Utc::now().timestamp_millis() / 1000; //seconds
+        if token_data.claims.exp < now {
+            true
         } else {
-            Err("Invalid token".to_string())
+            false
         }
+
     }
     pub fn get_user_id(
         token_data: &TokenData<Self>,
         conn: &DbConnection,
     ) -> Result<i32, CustomError> {
         User::find_id_by_login_session(&token_data.claims, conn)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TokenResponse {
+    pub token: String,
+    pub token_type: String, // usually "Bearer"
+}
+
+impl TokenResponse {
+    pub fn new(token_string: String) -> Self {
+        Self {
+            token: token_string,
+            token_type: "Bearer".to_string(),
+        }
     }
 }

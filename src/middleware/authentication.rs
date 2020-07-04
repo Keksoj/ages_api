@@ -1,9 +1,9 @@
 use crate::{
     config::{db, routes},
 
-    toolbox::response::ResponseBody,
     jwt::user_token::UserToken,
     // ::{decode_token, verify_token},
+    toolbox::response::ResponseBody,
 };
 use actix_service::{Service, Transform};
 
@@ -22,6 +22,7 @@ use futures::{
 };
 
 use std::{
+    fmt,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -67,7 +68,8 @@ where
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future =
+        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     fn poll_ready(
         &mut self,
@@ -97,7 +99,9 @@ where
         // allow /auth/login and /auth/signup
         for ignore_route in routes::IGNORE_ROUTES.iter() {
             if request.path().starts_with(ignore_route) {
-                debug!("The request path is in the ignored routes! It's a pass.");
+                debug!(
+                    "The request path is in the ignored routes! It's a pass."
+                );
                 let future = self.service.call(request);
                 return Box::pin(async move {
                     let response = future.await?;
@@ -140,7 +144,10 @@ where
             }
         };
 
-        debug!("Checking the start of the authorization header...");
+        debug!(
+            "Checking the start of the authorization header: {}",
+            str_authen_header
+        );
         if !str_authen_header.starts_with("Bearer")
             && !str_authen_header.starts_with("bearer")
         {
@@ -162,13 +169,13 @@ where
         debug!("Decoding the token");
         let token_data = match UserToken::decode_token(token.to_string()) {
             Ok(decoded_data) => decoded_data,
-            Err(_) => {
+            Err(decode_error) => {
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
                             .json(ResponseBody::new(
-                                "Could not decode the token",
-                                "",
+                                "Could not decode the token:",
+                                format!("{}", decode_error),
                             ))
                             .into_body(),
                     ))
@@ -193,28 +200,25 @@ where
             }
         };
 
-        match UserToken::verify_token(&token_data, &conn) {
-            Ok(user_string) => {
-                debug!("We accept the validity of user {}'s request", user_string);
-                let future = self.service.call(request);
-                return Box::pin(async move {
-                    let response = future.await?;
-                    Ok(response)
-                });
-            }
-            Err(error_string) => {
-                error!("invalid jwt");
-                Box::pin(async move {
-                    Ok(request.into_response(
-                        HttpResponse::Unauthorized()
-                            .json(ResponseBody::new(
-                                "Token verification failed with this error: ",
-                                &error_string,
-                            ))
-                            .into_body(),
-                    ))
-                })
-            }
+        if UserToken::token_is_still_valid(&token_data) {
+            debug!("The JWT token is still valid, it's a pass");
+            let future = self.service.call(request);
+            return Box::pin(async move {
+                let response = future.await?;
+                Ok(response)
+            });
+        } else {
+            error!("invalid jwt");
+            return Box::pin(async move {
+                Ok(request.into_response(
+                    HttpResponse::Unauthorized()
+                        .json(ResponseBody::new(
+                            "The JWT token isn't valid anymore",
+                            "",
+                        ))
+                        .into_body(),
+                ))
+            });
         }
     }
 }

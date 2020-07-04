@@ -29,49 +29,45 @@ pub struct User {
     pub login_session: String,
 }
 
-#[derive(Serialize, Deserialize, Insertable, Queryable)]
+#[derive(Serialize, Deserialize, Insertable, Queryable, Debug)]
 #[table_name = "users"]
-pub struct UserDTO {
+pub struct ReceivedUser {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct LoginDTO {
-    pub username: String,
-    pub password: String,
-}
-#[derive(Insertable)]
-#[table_name = "users"]
-pub struct LoginInfoDTO {
-    pub username: String,
+pub struct LoginInfo {
+    pub is_already_logged_in: bool,
     pub login_session: String,
 }
 
 impl User {
     pub fn signup(
-        user_dto: UserDTO,
+        received_user: ReceivedUser,
         conn: &DbConnection,
     ) -> Result<String, CustomError> {
-        if Self::user_already_exists(&user_dto.username, conn) {
+        if Self::user_already_exists(&received_user.username, conn) {
             return Ok(format!(
                 "User '{}' is already registered",
-                &user_dto.username
+                &received_user.username
             ));
         }
-        let hashed_passwd = hash(&user_dto.password, DEFAULT_COST).unwrap();
-        let user = UserDTO {
+        let hashed_passwd =
+            hash(&received_user.password, DEFAULT_COST).unwrap();
+        let insertable_user = ReceivedUser {
+            username: received_user.username,
             password: hashed_passwd,
-            ..user_dto
         };
-        diesel::insert_into(users).values(&user).execute(conn)?;
+        diesel::insert_into(users)
+            .values(&insertable_user)
+            .execute(conn)?;
         Ok("The new user is registered in the database".to_string())
     }
 
     pub fn login(
-        login_dto: LoginDTO,
+        login_dto: &ReceivedUser,
         conn: &DbConnection,
-    ) -> Result<LoginInfoDTO, CustomError> {
+    ) -> Result<String, CustomError> {
         let user_to_verify = users
             .filter(username.eq(&login_dto.username))
             .get_result::<User>(conn)?;
@@ -80,27 +76,28 @@ impl User {
             return Err(CustomError::new(500, "Password is empty".to_string()));
         }
         if !verify(&login_dto.password, &user_to_verify.password).unwrap() {
-            return Err(CustomError::new(500, "Password doesn't match".to_string()));
+            return Err(CustomError::new(
+                500,
+                "Password doesn't match".to_string(),
+            ));
         }
 
-        let login_history = LoginHistory::create(&user_to_verify.username, conn)?;
+        let login_history = LoginHistory::create(&user_to_verify.id)?;
 
         LoginHistory::save_login_history(login_history, conn)?;
         let login_session_str = Self::generate_login_session();
-        match User::update_login_session_to_db(
+        User::update_login_session_to_db(
             &user_to_verify.username,
             &login_session_str,
             conn,
-        ) {
-            Ok(()) => Ok(LoginInfoDTO {
-                username: user_to_verify.username,
-                login_session: login_session_str,
-            }),
-            Err(custom_error) => Err(custom_error),
-        }
+        )?;
+        Ok(login_session_str)
     }
 
-    pub fn logout(user_name: &str, conn: &DbConnection) -> Result<(), CustomError> {
+    pub fn logout(
+        user_name: &str,
+        conn: &DbConnection,
+    ) -> Result<(), CustomError> {
         let user = Self::find_user_by_username(user_name, conn)?;
         Self::update_login_session_to_db(&user.username, "", conn)?;
         Ok(())
