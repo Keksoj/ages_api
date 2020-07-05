@@ -14,6 +14,20 @@ pub struct Person {
     pub user_id: i32,
 }
 
+#[derive(Serialize, Deserialize, AsChangeset, Insertable, Queryable, Clone, Debug)]
+#[table_name = "persons"]
+pub struct InsertablePerson {
+    pub name: String,
+    pub birthdate: i64,
+    pub user_id: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReceivedPerson {
+    pub name: String,
+    pub birthdate: i64,
+}
+
 impl Person {
     pub fn find_all(user_id: i32, conn: &DbConnection) -> Result<Vec<Self>, CustomError> {
         let persons = persons::table
@@ -31,15 +45,21 @@ impl Person {
 
     pub fn create(
         received_person: ReceivedPerson,
+        uid: i32,
         conn: &DbConnection,
     ) -> Result<Self, CustomError> {
         debug!(
             "We will insert this person in the database: {:#?}",
             received_person
         );
+        let insertable_person = InsertablePerson {
+            name: received_person.name,
+            birthdate: received_person.birthdate,
+            user_id: uid,
+        };
 
         let person = diesel::insert_into(persons::table)
-            .values(received_person)
+            .values(insertable_person)
             .get_result(conn)?;
         Ok(person)
     }
@@ -68,11 +88,4 @@ impl Person {
             .execute(conn)?;
         Ok(number_of_deleted_persons)
     }
-}
-
-#[derive(Serialize, Deserialize, AsChangeset, Insertable, Queryable, Clone, Debug)]
-#[table_name = "persons"]
-pub struct ReceivedPerson {
-    pub name: String,
-    pub birthdate: i64,
 }

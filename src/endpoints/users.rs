@@ -2,7 +2,8 @@ use crate::{
     config::db::connection,
     jwt::user_token::UserToken,
     models::{
-        person,
+        login_history::LoginHistory,
+        person::Person,
         user::{ReceivedUser, User},
     },
     toolbox::{
@@ -43,14 +44,20 @@ pub async fn login(json_login: web::Json<ReceivedUser>) -> Result<HttpResponse> 
 }
 
 // DELETE /auth/delete
-pub async fn delete_user(request: HttpRequest) -> Result<HttpResponse, CustomError> {
+pub async fn delete(request: HttpRequest) -> Result<HttpResponse, CustomError> {
     let uid = get_uid_from_request(&request)?;
     let conn = connection()?;
 
-    let number_of_deleted_persons = person::Person::delete_all_wit_uid(uid, &conn)?;
+    let deleted_persons = Person::delete_all_wit_uid(uid, &conn)?;
+    let deleted_logins = LoginHistory::delete_a_users_history(&uid, &conn)?;
+    let deleted_user = User::delete(uid, &conn)?;
+
     return Ok(HttpResponse::Ok().json(ResponseBody::new(
-        "We deleted the user and all the associated persons",
-        format!("{} persons deleted", number_of_deleted_persons),
+        "We deleted :",
+        format!(
+            "The user'{}', the {} associated persons, {} login rows",
+            deleted_user.username, deleted_persons, deleted_logins
+        ),
     )));
 }
 

@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
                     .send_wildcard()
                     .allowed_origin("http://localhost:3000") // the react front-end
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
-                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "DELETE"])
                     .allowed_header(header::CONTENT_TYPE)
                     .finish(),
             )

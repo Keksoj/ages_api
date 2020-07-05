@@ -1,6 +1,8 @@
 use crate::{
+    config::db,
     config::routes,
     jwt::user_token::UserToken,
+    models::user::User,
     // ::{decode_token, verify_token},
     toolbox::response::ResponseBody,
 };
@@ -167,23 +169,34 @@ where
             }
         };
 
-        // no access to the database is needed for JWT authentication!
-        // debug!("Connecting to the database");
-        // let conn = match db::connection() {
-        //     Ok(conn) => conn,
-        //     Err(_) => {
-        //         return Box::pin(async move {
-        //             Ok(request.into_response(
-        //                 HttpResponse::Unauthorized()
-        //                     .json(ResponseBody::new(
-        //                         "Could not connect to the database",
-        //                         "",
-        //                     ))
-        //                     .into_body(),
-        //             ))
-        //         });
-        //     }
-        // };
+        // needed to check that the user exists
+        debug!("Connecting to the database");
+        let conn = match db::connection() {
+            Ok(conn) => conn,
+            Err(_) => {
+                return Box::pin(async move {
+                    Ok(request.into_response(
+                        HttpResponse::Unauthorized()
+                            .json(ResponseBody::new(
+                                "Could not connect to the database",
+                                "",
+                            ))
+                            .into_body(),
+                    ))
+                });
+            }
+        };
+
+        debug!("Checking the user's existence");
+        if User::find_user_by_id(&token_data.claims.uid, &conn).is_err() {
+            return Box::pin(async move {
+                Ok(request.into_response(
+                    HttpResponse::Unauthorized()
+                        .json(ResponseBody::new("This user doesn't exist…", ""))
+                        .into_body(),
+                ))
+            });
+        };
 
         if UserToken::is_still_valid(&token_data) {
             debug!("The JWT token is still valid, it's a pass");

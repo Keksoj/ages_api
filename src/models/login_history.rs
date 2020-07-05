@@ -41,4 +41,11 @@ impl LoginHistory {
             .values(&insert_record)
             .execute(conn)
     }
+
+    pub fn delete_a_users_history(uid: &i32, conn: &DbConnection) -> QueryResult<usize> {
+        let deleted_rows = diesel::delete(login_history::table)
+            .filter(login_history::user_id.eq(uid))
+            .execute(conn)?;
+        Ok(deleted_rows)
+    }
 }

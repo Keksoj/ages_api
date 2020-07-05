@@ -24,18 +24,18 @@ pub async fn find(person_id: web::Path<i32>) -> Result<HttpResponse, CustomError
 // POST HOST/persons
 pub async fn create(
     query_content: web::Json<ReceivedPerson>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, CustomError> {
+    let uid = get_uid_from_request(&request)?;
+
     debug!(
         "We receided a post request with this content: {:?}",
         query_content
     );
-    let cloned_content = query_content.clone();
-    let received_person = ReceivedPerson {
-        name: cloned_content.name,
-        birthdate: cloned_content.birthdate,
-    };
+    let received_person = query_content.clone();
+    
     let conn = connection()?;
-    let response_data = Person::create(received_person, &conn)?;
+    let response_data = Person::create(received_person, uid, &conn)?;
     Ok(HttpResponse::Ok().json(response_data))
 }
 

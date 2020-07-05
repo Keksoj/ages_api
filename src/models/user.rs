@@ -73,6 +73,13 @@ impl User {
         Ok(matching_user)
     }
 
+    pub fn delete(uid: i32, conn: &DbConnection) -> Result<User, CustomError> {
+        let deleted_user = diesel::delete(users::table)
+            .filter(users::id.eq(uid))
+            .get_result(conn)?;
+        Ok(deleted_user)
+    }
+
     pub fn find_matching_user(
         passwd: &str,
         users_to_check_against: Vec<Self>,
