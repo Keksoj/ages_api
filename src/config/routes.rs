@@ -7,6 +7,7 @@ pub fn config_routes(cfg: &mut ServiceConfig) {
         scope("/auth")
             .service(resource("/signup").route(post().to(endpoints::users::signup)))
             .service(resource("/login").route(post().to(endpoints::users::login)))
+            .service(resource("/update").route(put().to(endpoints::users::login)))
             .service(resource("/delete").route(delete().to(endpoints::users::delete))),
     )
     .service(

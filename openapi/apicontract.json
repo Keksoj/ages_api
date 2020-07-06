@@ -12,6 +12,150 @@
         }
     ],
     "paths": {
+        "/auth/signup": {
+            "post": {
+                "description": "Register a new user in the database",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns the registered user with id",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullUser"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Log a user to receive a JWT",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns a json web token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/securitySchemes/bearerAuth"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/update": {
+            "put": {
+                "description": "Change the user's credentials, most probably the password",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FullUser"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns the updated user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullUser"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/delete": {
+            "delete": {
+                "description": "Delete the user AND ALL THE ASSOCIATED DATA",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FullUser"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns a success message",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/textResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/persons": {
             "get": {
                 "summary": "Return the list of all registered persons",
@@ -42,7 +186,7 @@
                 }
             },
             "post": {
-                "summary": "Post a Person to add to the user's family",
+                "description": "Post a Person to add to the user's family",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -55,6 +199,82 @@
                 "responses": {
                     "200": {
                         "description": "Returns the registered person",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullPerson"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Change an already registered person",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FullPerson"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns the registered person",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullPerson"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/persons/{id}": {
+            "get": {
+                "summary": "Return one registered person",
+                "responses": {
+                    "200": {
+                        "description": "A person",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullPerson"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorModel"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete the registered person",
+                "responses": {
+                    "200": {
+                        "description": "The deleted person",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -114,6 +334,35 @@
                     { "$ref": "#/components/schemas/Person" },
                     { "$ref": "#/components/schemas/Identifier" }
                 ]
+            },
+            "User": {
+                "title": "User",
+                "description": "A user as provided by the client for signup and login",
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "my_awesome_password"
+                    }
+                }
+            },
+            "FullUser": {
+                "title": "FullUser",
+                "description": "a full user with id",
+                "allOf": [
+                    { "$ref": "#/components/schemas/User" },
+                    { "$ref": "#/components/schemas/Identifier" }
+                ]
+            },
+            "textResponse": {
+                "title": "textResponse",
+                "description": "Plain text feedback",
+                "type": "string",
+                "example": "User does not exist"
             }
         }
     }

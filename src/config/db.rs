@@ -1,6 +1,10 @@
 // use crate::toolbox::errors::CustomError;
 // use actix_web::web;
-use diesel::{pg::PgConnection, r2d2::ConnectionManager};
+use diesel::{
+    pg::PgConnection,
+    r2d2::{self, ConnectionManager},
+};
+
 use diesel_migrations::embed_migrations;
 
 embed_migrations!();

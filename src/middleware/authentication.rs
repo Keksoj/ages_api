@@ -4,7 +4,6 @@ use crate::{
     jwt::user_token::UserToken,
     models::user::User,
     // ::{decode_token, verify_token},
-    toolbox::response::ResponseBody,
 };
 use actix_service::{Service, Transform};
 
@@ -103,10 +102,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json(ResponseBody::new(
-                                "We did not find an authentication header…",
-                                "",
-                            ))
+                            .json("We did not find an authentication header.")
                             .into_body(),
                     ))
                 });
@@ -120,10 +116,9 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json(ResponseBody::new(
-                                "The authorization header doesn't seem to be stringifyable",
-                                "",
-                            ))
+                            .json(
+                                "The authorization header doesn't seem to be stringifyable"
+                            )
                             .into_body(),
                     ))
                 });
@@ -140,10 +135,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json(ResponseBody::new(
-                            "The authorization header doesn't start with 'bearer'",
-                            "",
-                        ))
+                        .json("The authorization header doesn't start with 'bearer'")
                         .into_body(),
                 ))
             });
@@ -159,10 +151,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json(ResponseBody::new(
-                                "Could not decode the token:",
-                                format!("{}", decode_error),
-                            ))
+                            .json(format!("Could not decode the token: {}", decode_error))
                             .into_body(),
                     ))
                 });
@@ -178,10 +167,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json(ResponseBody::new(
-                                "Could not connect to the database",
-                                "",
-                            ))
+                            .json("Could not connect to the database")
                             .into_body(),
                     ))
                 });
@@ -193,7 +179,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json(ResponseBody::new("This user doesn't exist.", ""))
+                        .json("This user doesn't exist.")
                         .into_body(),
                 ))
             });
@@ -212,7 +198,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json(ResponseBody::new("The JWT token isn't valid anymore", ""))
+                        .json("The JWT token isn't valid anymore")
                         .into_body(),
                 ))
             });

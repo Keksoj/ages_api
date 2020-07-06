@@ -1,7 +1,9 @@
+use actix_web::web;
 use diesel::prelude::*;
 
 use crate::{
     config::db::DbConnection,
+    config::db::Pool,
     schema::users::{self, dsl::*},
     toolbox::errors::CustomError,
 };
@@ -28,12 +30,13 @@ pub struct ReceivedUser {
 impl User {
     pub fn signup(
         received_user: ReceivedUser,
-        conn: &DbConnection,
-    ) -> Result<String, CustomError> {
-        if Self::user_already_exists(&received_user.username, conn) {
-            return Ok(format!(
-                "User '{}' is already registered",
-                &received_user.username
+        pool: &web::Data<Pool>,
+    ) -> Result<User, CustomError> {
+        let conn = pool.get().unwrap();
+        if Self::user_already_exists(&received_user.username, &conn) {
+            return Err(CustomError::new(
+                202,
+                format!("User '{}' is already registered", &received_user.username),
             ));
         }
         let hashed_passwd = hash(&received_user.password, DEFAULT_COST)?;
@@ -41,26 +44,25 @@ impl User {
             username: received_user.username,
             password: hashed_passwd,
         };
-        diesel::insert_into(users)
+        let registered_user = diesel::insert_into(users)
             .values(&insertable_user)
-            .execute(conn)?;
-        Ok(format!(
-            "{} is registered in the database",
-            insertable_user.username
-        ))
+            .get_result(&conn)?;
+        Ok(registered_user)
     }
 
     pub fn login(
         received_login: &ReceivedUser,
-        conn: &DbConnection,
+        pool: &web::Data<Pool>,
     ) -> Result<User, CustomError> {
+        let conn = pool.get().unwrap();
+
         if received_login.password.is_empty() {
             return Err(CustomError::new(500, "Password is empty".to_string()));
         }
 
         let users_with_username = users
             .filter(username.eq(&received_login.username))
-            .get_results::<User>(conn)?;
+            .get_results::<User>(&conn)?;
 
         let matching_user =
             Self::find_matching_user(&received_login.password, users_with_username)?;
@@ -68,18 +70,24 @@ impl User {
         Ok(matching_user)
     }
 
-    pub fn update(updated_data: &User, conn: &DbConnection) -> Result<User, CustomError> {
+    pub fn update(
+        updated_data: &User,
+        pool: &web::Data<Pool>,
+    ) -> Result<User, CustomError> {
+        let conn = pool.get().unwrap();
+
         let user = diesel::update(users::table)
             .filter(users::id.eq(updated_data.id))
             .set(updated_data)
-            .get_result(conn)?;
+            .get_result(&conn)?;
         Ok(user)
     }
 
-    pub fn delete(uid: i32, conn: &DbConnection) -> Result<User, CustomError> {
+    pub fn delete(uid: i32, pool: &web::Data<Pool>) -> Result<User, CustomError> {
+        let conn = pool.get().unwrap();
         let deleted_user = diesel::delete(users::table)
             .filter(users::id.eq(uid))
-            .get_result(conn)?;
+            .get_result(&conn)?;
         Ok(deleted_user)
     }
 

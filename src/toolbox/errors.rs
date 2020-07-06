@@ -1,9 +1,10 @@
 use actix_web::{http, http::StatusCode, HttpResponse, ResponseError};
 use bcrypt;
+// use diesel::r2d2;
 use diesel::result::Error as DieselError;
 use serde::Deserialize;
-use serde_json::json;
 use std::fmt;
+use r2d2; // for the error conversion
 
 #[derive(Debug, Deserialize)]
 pub struct CustomError {
@@ -33,9 +34,7 @@ impl From<DieselError> for CustomError {
             DieselError::DatabaseError(_, err) => {
                 CustomError::new(409, err.message().to_string())
             }
-            DieselError::NotFound => {
-                CustomError::new(404, "Person not found".to_string())
-            }
+            DieselError::NotFound => CustomError::new(404, "Item not found".to_string()),
             err => CustomError::new(500, format!("Unknown Diesel error: {}", err)),
         }
     }
@@ -65,16 +64,11 @@ impl From<bcrypt::BcryptError> for CustomError {
         CustomError::new(500, error.to_string())
     }
 }
-impl From <r2d2::Error> for CustomError {
+impl From<r2d2::Error> for CustomError {
     fn from(error: r2d2::Error) -> CustomError {
         CustomError::new(500, error.to_string())
     }
 }
-// impl From<NoneError> for CustomError {
-//     fn from(error: NoneError) -> CustomError {
-//         CustomError::new(500, error)
-//     }
-// }
 
 impl ResponseError for CustomError {
     fn error_response(&self) -> HttpResponse {
@@ -82,7 +76,6 @@ impl ResponseError for CustomError {
             Ok(status_code) => status_code,
             Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
-
         // this filters error messages under 500
         // good for privacy, bad for debugging
         // let error_message = match status_code.as_u16() < 500 {
@@ -91,7 +84,6 @@ impl ResponseError for CustomError {
         // };
         let error_message = &self.error_message;
 
-        HttpResponse::build(status_code).json(json!({ "message": error_message }))
+        HttpResponse::build(status_code).body(error_message)
     }
 }
-
