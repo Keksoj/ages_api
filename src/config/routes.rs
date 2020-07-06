@@ -26,4 +26,4 @@ pub fn config_routes(cfg: &mut ServiceConfig) {
     .service(scope("/ping").service(resource("").route(get().to(toolbox::ping::ping))));
 }
 
-pub const IGNORE_ROUTES: [&str; 3] = ["/auth/signup", "/auth/login", "/ping"];
+pub const IGNORE_ROUTES: [&str; 4] = ["/auth/signup", "/auth/login", "/ping", "/documentation"];

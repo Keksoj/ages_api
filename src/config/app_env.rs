@@ -3,7 +3,7 @@ use actix_web::http::Method;
 
 #[derive(Clone)]
 pub struct AppEnv {
-    pub db_url: String,
+    pub database_url: String,
     pub bind_url: String,
     pub allowed_origin: String,
     pub allowed_methods: Vec<Method>,
@@ -15,7 +15,7 @@ impl AppEnv {
         let port = env::var("PORT").expect("a PORT is not provided in the environment");
         let bind_url = format!("{}:{}", host, port).to_string();
         
-        let db_url = env::var("DATABASE_URL").expect("Database url not set in env");
+        let database_url = env::var("DATABASE_URL").expect("Database url not set in env");
         
         let allowed_origin =
             env::var("ALLOWED_ORIGIN").expect("allowed origin not set in env");
@@ -28,7 +28,7 @@ impl AppEnv {
         ];
 
         Self {
-            db_url,
+            database_url,
             bind_url,
             allowed_origin,
             allowed_methods,

@@ -30,9 +30,34 @@ Besides the usual user data (username & hashed password), the API stores the use
 
 ## CRUD operations
 
-They allow to :
+They allow the following for users :
 
 - create a user (signup)
-- delete a user
 - update a user (ex: change the password)
-- 
+- delete a user (and all the related data)
+
+And for persons:
+
+- create one
+- update one
+- delete one
+- retrieve one or all
+
+A user has access only to the data she created.
+
+## Authentication management with JWT
+
+The json web token standard allows for stateless user session management thanks to its clever one-sided encrytion scheme.
+The downside is: one does not simply logout with JWT. The client will have to make sure the JWT is deleted.
+In case of emergency, the nuclear otpion will be to request the deletion of the user and all the associated data.
+The authentication middleware checks for the user's existence before verifying the token.
+
+## OpenAPI
+
+It is a good thing apparently, so documenting the API's behaviour with it won't hurt.
+Accessible on the `/documentation` endpoint:
+
+```sh
+curl $URL:$PORT/documentation
+```
+

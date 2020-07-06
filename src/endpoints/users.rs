@@ -54,7 +54,7 @@ pub async fn update(
     let user_to_update = json_user.0;
     let updated_user = User::update(&user_to_update, &conn)?;
     Ok(HttpResponse::Ok().json(ResponseBody::new(
-        "Successfullu updated the user:",
+        "Successfully updated the user:",
         updated_user,
     )))
 }

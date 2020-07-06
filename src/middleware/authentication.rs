@@ -1,7 +1,5 @@
 use crate::{
-    config::db,
     config::db::Pool,
-
     config::routes,
     jwt::user_token::UserToken,
     models::user::User,
@@ -173,7 +171,7 @@ where
 
         // needed to check that the user exists
         debug!("Connecting to the database");
-        let pool  = request.app_data::<Pool>().unwrap();
+        let pool = request.app_data::<Pool>().unwrap();
         let conn = match pool.get() {
             Ok(conn) => conn,
             Err(_) => {
