@@ -28,24 +28,30 @@ pub struct ReceivedPerson {
     pub birthdate: i64,
 }
 
+// to avoid confusion with column name 'user_id', we spell it 'uid'
 impl Person {
-    pub fn find_all(user_id: i32, conn: &DbConnection) -> Result<Vec<Self>, CustomError> {
+    pub fn find_all(uid: i32, conn: &DbConnection) -> Result<Vec<Self>, CustomError> {
         let persons = persons::table
-            .filter(persons::user_id.eq(user_id))
+            .filter(persons::user_id.eq(uid))
             .get_results(conn)?;
         Ok(persons)
     }
 
-    pub fn find_by_id(person_id: i32, conn: &DbConnection) -> Result<Self, CustomError> {
+    pub fn find_by_id(
+        uid: i32,
+        person_id: i32,
+        conn: &DbConnection,
+    ) -> Result<Self, CustomError> {
         let person = persons::table
             .filter(persons::id.eq(person_id))
+            .filter(persons::user_id.eq(uid))
             .first(conn)?;
         Ok(person)
     }
 
     pub fn create(
-        received_person: ReceivedPerson,
         uid: i32,
+        received_person: ReceivedPerson,
         conn: &DbConnection,
     ) -> Result<Self, CustomError> {
         debug!(
@@ -65,26 +71,36 @@ impl Person {
     }
 
     pub fn update(
-        person_to_update: Person,
-        person_id: i32,
+        uid: i32,
+        updated_person: Person,
         conn: &DbConnection,
     ) -> Result<Self, CustomError> {
         let person = diesel::update(persons::table)
-            .filter(persons::id.eq(person_id))
-            .set(person_to_update)
+            .filter(persons::id.eq(updated_person.id))
+            .filter(persons::user_id.eq(uid))
+            .set(updated_person)
             .get_result(conn)?;
         Ok(person)
     }
-    pub fn delete(person_id: i32, conn: &DbConnection) -> Result<usize, CustomError> {
-        let response = diesel::delete(persons::table.find(person_id)).execute(conn)?;
+
+    pub fn delete(
+        uid: i32,
+        person_id: i32,
+        conn: &DbConnection,
+    ) -> Result<usize, CustomError> {
+        let response = diesel::delete(persons::table)
+            .filter(persons::id.eq(person_id))
+            .filter(persons::user_id.eq(uid))
+            .execute(conn)?;
         Ok(response)
     }
+
     pub fn delete_all_wit_uid(
-        user_id: i32,
+        uid: i32,
         conn: &DbConnection,
     ) -> Result<usize, CustomError> {
         let number_of_deleted_persons = diesel::delete(persons::table)
-            .filter(persons::user_id.eq(user_id))
+            .filter(persons::user_id.eq(uid))
             .execute(conn)?;
         Ok(number_of_deleted_persons)
     }

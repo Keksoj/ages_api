@@ -1,13 +1,12 @@
 use crate::{endpoints, toolbox};
 use actix_web::web::{delete, get, post, put, resource, scope, ServiceConfig};
 
-pub fn config_services(cfg: &mut ServiceConfig) {
+pub fn config_routes(cfg: &mut ServiceConfig) {
     info!("Configurating the routes...");
     cfg.service(
         scope("/auth")
             .service(resource("/signup").route(post().to(endpoints::users::signup)))
             .service(resource("/login").route(post().to(endpoints::users::login)))
-            .service(resource("/logout").route(post().to(endpoints::users::logout)))
             .service(resource("/delete").route(delete().to(endpoints::users::delete))),
     )
     .service(

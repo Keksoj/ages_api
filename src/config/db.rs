@@ -1,33 +1,20 @@
-use crate::toolbox::errors::CustomError;
-use diesel::pg::PgConnection;
-use diesel::r2d2::ConnectionManager;
+// use crate::toolbox::errors::CustomError;
+// use actix_web::web;
+use diesel::{pg::PgConnection, r2d2::ConnectionManager};
 use diesel_migrations::embed_migrations;
-
-use lazy_static::lazy_static;
-use r2d2;
-use std::env;
-
-pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
-
-lazy_static! {
-    static ref POOL: Pool = {
-        let db_url = env::var("DATABASE_URL").expect("Database url not set");
-        let manager = ConnectionManager::<PgConnection>::new(db_url);
-        Pool::new(manager).expect("Failed to create db pool")
-    };
-}
 
 embed_migrations!();
 
-pub fn init() {
-    lazy_static::initialize(&POOL);
-    let conn = connection().expect("Failed to get db connection");
-    embedded_migrations::run(&conn).unwrap();
-}
+pub type DbConnection = PgConnection;
+pub type Pool = r2d2::Pool<ConnectionManager<DbConnection>>;
 
-pub fn connection() -> Result<DbConnection, CustomError> {
-    POOL.get().map_err(|error| {
-        CustomError::new(500, format!("Failed getting db connection: {}", error))
-    })
+pub fn migrate_and_config_db(db_url: &str) -> Pool {
+    info!("Migrating and configurating database...");
+    let manager = ConnectionManager::<DbConnection>::new(db_url);
+    let pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.");
+    embedded_migrations::run(&pool.get().expect("Failed to migrate."));
+
+    pool
 }

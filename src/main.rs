@@ -14,45 +14,44 @@ pub mod schema;
 pub mod toolbox;
 
 use actix_cors::Cors;
+use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
+use config::{db::migrate_and_config_db, routes::config_routes, app_env::AppEnv};
 use dotenv::dotenv;
 use env_logger;
-use std::env;
+use middleware::authentication::Authentication;
+// use std::env;
 use std::io::Result;
 
 #[actix_rt::main]
 async fn main() -> Result<()> {
+    
     dotenv().ok().expect("Failed to read the .env file.");
-    env::set_var("RUST_LOG", "actix_web,actix-service,back,diesel");
-    env_logger::init();
-    config::db::init();
+    
+    let app_env = AppEnv::establish();
+    let cloned_env = app_env.clone();
 
-    let bind_url = get_bind_url_from_env();
+    env_logger::init();
+
+    let pool = migrate_and_config_db(&app_env.db_url);
 
     HttpServer::new(move || {
         App::new()
             .wrap(
                 Cors::new()
                     .send_wildcard()
-                    .allowed_origin("http://localhost:3000") // the react front-end
+                    .allowed_origin(&cloned_env.allowed_origin)
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
-                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "DELETE"])
+                    .allowed_methods(&cloned_env.allowed_methods)
                     .allowed_header(header::CONTENT_TYPE)
                     .finish(),
             )
-            .wrap(actix_web::middleware::Logger::default())
-            .wrap(middleware::authentication::Authentication)
-            .configure(config::routes::config_services)
+            .data(pool.clone())
+            .wrap(Logger::default())
+            .wrap(Authentication)
+            .configure(config_routes)
     })
-    .bind(bind_url)?
+    .bind(&app_env.bind_url)?
     .run()
     .await
-}
-
-fn get_bind_url_from_env() -> String {
-    let host = env::var("HOST").expect("a HOST is not provided in the environment");
-    let port = env::var("PORT").expect("a PORT is not provided in the environment");
-    let bind_url = format!("{}:{}", host, port).to_string();
-    info!("Listening to {}...", bind_url);
-    bind_url
 }

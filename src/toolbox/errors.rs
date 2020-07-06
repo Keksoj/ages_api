@@ -1,5 +1,5 @@
-use crate::toolbox::response::ResponseBody;
 use actix_web::{http, http::StatusCode, HttpResponse, ResponseError};
+use bcrypt;
 use diesel::result::Error as DieselError;
 use serde::Deserialize;
 use serde_json::json;
@@ -34,7 +34,7 @@ impl From<DieselError> for CustomError {
                 CustomError::new(409, err.message().to_string())
             }
             DieselError::NotFound => {
-                CustomError::new(404, "employee record not found".to_string())
+                CustomError::new(404, "Person not found".to_string())
             }
             err => CustomError::new(500, format!("Unknown Diesel error: {}", err)),
         }
@@ -60,7 +60,16 @@ impl From<serde_json::error::Error> for CustomError {
         CustomError::new(500, error.to_string())
     }
 }
-
+impl From<bcrypt::BcryptError> for CustomError {
+    fn from(error: bcrypt::BcryptError) -> CustomError {
+        CustomError::new(500, error.to_string())
+    }
+}
+impl From <r2d2::Error> for CustomError {
+    fn from(error: r2d2::Error) -> CustomError {
+        CustomError::new(500, error.to_string())
+    }
+}
 // impl From<NoneError> for CustomError {
 //     fn from(error: NoneError) -> CustomError {
 //         CustomError::new(500, error)
@@ -75,6 +84,7 @@ impl ResponseError for CustomError {
         };
 
         // this filters error messages under 500
+        // good for privacy, bad for debugging
         // let error_message = match status_code.as_u16() < 500 {
         //     true => self.error_message.clone(),
         //     false => "Internal server error".to_string(),
@@ -85,24 +95,3 @@ impl ResponseError for CustomError {
     }
 }
 
-// todo : merge the following code into CustomError
-pub struct ServiceError {
-    pub http_status: StatusCode,
-    pub body: ResponseBody<String>,
-}
-
-impl ServiceError {
-    pub fn new(http_status: StatusCode, message: String) -> Self {
-        Self {
-            http_status,
-            body: ResponseBody {
-                message,
-                data: String::new(),
-            },
-        }
-    }
-
-    pub fn to_http_response(&self) -> HttpResponse {
-        HttpResponse::build(self.http_status).json(&self.body)
-    }
-}

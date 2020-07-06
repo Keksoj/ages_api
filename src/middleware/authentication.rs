@@ -1,5 +1,7 @@
 use crate::{
     config::db,
+    config::db::Pool,
+
     config::routes,
     jwt::user_token::UserToken,
     models::user::User,
@@ -150,10 +152,10 @@ where
         }
 
         debug!("Parsing token");
-        let token = str_authen_header[6..str_authen_header.len()].trim();
+        let raw_token = str_authen_header[6..str_authen_header.len()].trim();
 
         debug!("Decoding the token");
-        let token_data = match UserToken::decode_token(token.to_string()) {
+        let token = match UserToken::decode_token(raw_token.to_string()) {
             Ok(decoded_data) => decoded_data,
             Err(decode_error) => {
                 return Box::pin(async move {
@@ -171,7 +173,8 @@ where
 
         // needed to check that the user exists
         debug!("Connecting to the database");
-        let conn = match db::connection() {
+        let pool  = request.app_data::<Pool>().unwrap();
+        let conn = match pool.get() {
             Ok(conn) => conn,
             Err(_) => {
                 return Box::pin(async move {
@@ -188,17 +191,17 @@ where
         };
 
         debug!("Checking the user's existence");
-        if User::find_user_by_id(&token_data.claims.uid, &conn).is_err() {
+        if User::find_user_by_id(&token.uid, &conn).is_err() {
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json(ResponseBody::new("This user doesn't exist…", ""))
+                        .json(ResponseBody::new("This user doesn't exist.", ""))
                         .into_body(),
                 ))
             });
         };
 
-        if UserToken::is_still_valid(&token_data) {
+        if UserToken::is_still_valid(&token) {
             debug!("The JWT token is still valid, it's a pass");
             let future = self.service.call(request);
 

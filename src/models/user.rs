@@ -2,13 +2,11 @@ use diesel::prelude::*;
 
 use crate::{
     config::db::DbConnection,
-    models::login_history::LoginHistory,
     schema::users::{self, dsl::*},
     toolbox::errors::CustomError,
 };
 use bcrypt::{hash, verify, DEFAULT_COST};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(
     Serialize, Deserialize, Identifiable, AsChangeset, Insertable, Queryable, Clone, Debug,
@@ -18,7 +16,6 @@ pub struct User {
     pub id: i32,
     pub username: String,
     pub password: String,
-    pub login_session: String,
 }
 
 #[derive(Serialize, Deserialize, Insertable, Queryable, Debug)]
@@ -39,7 +36,7 @@ impl User {
                 &received_user.username
             ));
         }
-        let hashed_passwd = hash(&received_user.password, DEFAULT_COST).unwrap();
+        let hashed_passwd = hash(&received_user.password, DEFAULT_COST)?;
         let insertable_user = ReceivedUser {
             username: received_user.username,
             password: hashed_passwd,
@@ -47,7 +44,10 @@ impl User {
         diesel::insert_into(users)
             .values(&insertable_user)
             .execute(conn)?;
-        Ok("The new user is registered in the database".to_string())
+        Ok(format!(
+            "{} is registered in the database",
+            insertable_user.username
+        ))
     }
 
     pub fn login(
@@ -65,12 +65,15 @@ impl User {
         let matching_user =
             Self::find_matching_user(&received_login.password, users_with_username)?;
 
-        let login_history = LoginHistory::create(&matching_user.id)?;
-
-        LoginHistory::save_login_history(login_history, conn)?;
-        let login_session_str = Self::generate_login_session();
-        User::update_login_session_to_db(matching_user.id, &login_session_str, conn)?;
         Ok(matching_user)
+    }
+
+    pub fn update(updated_data: &User, conn: &DbConnection) -> Result<User, CustomError> {
+        let user = diesel::update(users::table)
+            .filter(users::id.eq(updated_data.id))
+            .set(updated_data)
+            .get_result(conn)?;
+        Ok(user)
     }
 
     pub fn delete(uid: i32, conn: &DbConnection) -> Result<User, CustomError> {
@@ -92,12 +95,6 @@ impl User {
         return Err(CustomError::new(400, "Password doesn't match".to_string()));
     }
 
-    pub fn logout(uid: &i32, conn: &DbConnection) -> Result<(), CustomError> {
-        let user = Self::find_user_by_id(uid, conn)?;
-        Self::update_login_session_to_db(user.id, "", conn)?;
-        Ok(())
-    }
-
     pub fn find_user_by_id(uid: &i32, conn: &DbConnection) -> QueryResult<User> {
         users.filter(id.eq(uid)).get_result::<User>(conn)
     }
@@ -107,21 +104,5 @@ impl User {
             .filter(username.eq(un))
             .get_result::<User>(conn)
             .is_ok()
-    }
-
-    pub fn generate_login_session() -> String {
-        Uuid::new_v4().to_simple().to_string()
-    }
-
-    pub fn update_login_session_to_db(
-        uid: i32,
-        login_session_str: &str,
-        conn: &DbConnection,
-    ) -> Result<(), CustomError> {
-        let user = Self::find_user_by_id(&uid, conn)?;
-        diesel::update(users.find(user.id))
-            .set(login_session.eq(login_session_str.to_string()))
-            .execute(conn)?;
-        Ok(())
     }
 }
