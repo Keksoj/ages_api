@@ -1,7 +1,7 @@
 use crate::{
     config::db::Pool,
     models::person::{Person, ReceivedPerson},
-    toolbox::{errors::CustomError, uid_extractor::get_uid_from_request},
+    toolbox::{uid_extractor::get_uid_from_request},
 };
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 

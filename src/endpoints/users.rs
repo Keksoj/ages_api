@@ -15,7 +15,10 @@ pub async fn signup(
     pool: web::Data<Pool>,
 ) -> Result<HttpResponse> {
     let registered_user = User::signup(received_user.0, &pool)?;
-    Ok(HttpResponse::Ok().json(registered_user))
+    Ok(HttpResponse::Ok().body(format!(
+        "Sucessfully registered the user '{}'",
+        registered_user.username
+    )))
 }
 
 // POST HOST/auth/login
@@ -33,11 +36,14 @@ pub async fn login(
 
 // PUT /auth/update
 pub async fn update(
-    json_user: web::Json<User>,
+    json_user: web::Json<ReceivedUser>,
+    request: HttpRequest,
     pool: web::Data<Pool>,
 ) -> Result<HttpResponse> {
-    let user_to_update = json_user.0;
-    let updated_user = User::update(&user_to_update, &pool)?;
+    let uid = get_uid_from_request(&request)?;
+
+    let received_user = json_user.0;
+    let updated_user = User::update(uid, received_user, &pool)?;
     Ok(HttpResponse::Ok().body(format!(
         "Successfully updated the user '{}'",
         updated_user.username

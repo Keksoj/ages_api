@@ -7,7 +7,7 @@ pub fn get_uid_from_request(request: &HttpRequest) -> Result<i32, CustomError> {
         Some(authen_header) => authen_header,
         None => {
             return Err(
-                // the middleware should have checked this already
+                // the authentication middleware should have checked this already
                 CustomError::new(400, "Something went very wrong".to_string()),
             );
         }

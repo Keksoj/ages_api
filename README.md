@@ -1,6 +1,6 @@
 # Ages API
 
-A REST API written in Rust with JWT, PostgresQl.
+A REST API written in Rust with JWT.
 
 ## Purpose
 
@@ -30,7 +30,7 @@ Besides the usual user data (username & hashed password), the API stores the use
 
 ## CRUD operations
 
-They allow the following for users :
+On users :
 
 - create a user (signup)
 - update a user (ex: change the password)
@@ -39,15 +39,15 @@ They allow the following for users :
 And for persons:
 
 - create one
+- retrieve one or all
 - update one
 - delete one
-- retrieve one or all
 
 A user has access only to the data she created.
 
 ## Authentication management with JWT
 
-The json web token standard allows for stateless user session management thanks to its clever one-sided encrytion scheme.
+The json web token standard allows for stateless user session management thanks to its clever one-sided encryption scheme.
 The downside is: one does not simply logout with JWT. The client will have to make sure the JWT is deleted.
 In case of emergency, the nuclear otpion will be to request the deletion of the user and all the associated data.
 The authentication middleware checks for the user's existence before verifying the token.
@@ -60,4 +60,15 @@ Accessible on the `/documentation` endpoint:
 ```sh
 curl $URL:$PORT/documentation
 ```
+
+## How to use
+
+1. Clone the repo
+2. configure the `.env` file
+3. have rust installed and PostgresQL enabled
+4. do `cargo run`. 
+5. Import `apicontract.json` in postman and you're good to play around.
+
+Better instructions will follow in further commits.
+
 

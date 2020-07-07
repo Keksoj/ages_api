@@ -7,7 +7,7 @@ pub fn config_routes(cfg: &mut ServiceConfig) {
         scope("/auth")
             .service(resource("/signup").route(post().to(endpoints::users::signup)))
             .service(resource("/login").route(post().to(endpoints::users::login)))
-            .service(resource("/update").route(put().to(endpoints::users::login)))
+            .service(resource("/update").route(put().to(endpoints::users::update)))
             .service(resource("/delete").route(delete().to(endpoints::users::delete))),
     )
     .service(
@@ -25,6 +25,7 @@ pub fn config_routes(cfg: &mut ServiceConfig) {
             ),
     )
     .service(scope("/ping").service(resource("").route(get().to(toolbox::ping::ping))));
+    // the "/documentation" route is served in main
 }
 
 pub const IGNORE_ROUTES: [&str; 4] = ["/auth/signup", "/auth/login", "/ping", "/documentation"];

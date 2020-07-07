@@ -32,7 +32,7 @@ impl User {
         received_user: ReceivedUser,
         pool: &web::Data<Pool>,
     ) -> Result<User, CustomError> {
-        let conn = pool.get().unwrap();
+        let conn = pool.get()?;
         if Self::user_already_exists(&received_user.username, &conn) {
             return Err(CustomError::new(
                 202,
@@ -54,7 +54,7 @@ impl User {
         received_login: &ReceivedUser,
         pool: &web::Data<Pool>,
     ) -> Result<User, CustomError> {
-        let conn = pool.get().unwrap();
+        let conn = pool.get()?;
 
         if received_login.password.is_empty() {
             return Err(CustomError::new(500, "Password is empty".to_string()));
@@ -71,20 +71,27 @@ impl User {
     }
 
     pub fn update(
-        updated_data: &User,
+        uid: i32,
+        new_data: ReceivedUser,
         pool: &web::Data<Pool>,
     ) -> Result<User, CustomError> {
-        let conn = pool.get().unwrap();
+        let conn = pool.get()?;
+
+        let updatable_user_data = User {
+            id: uid,
+            username: new_data.username,
+            password: hash(&new_data.password, DEFAULT_COST)?,
+        };
 
         let user = diesel::update(users::table)
-            .filter(users::id.eq(updated_data.id))
-            .set(updated_data)
+            .filter(users::id.eq(uid))
+            .set(updatable_user_data)
             .get_result(&conn)?;
         Ok(user)
     }
 
     pub fn delete(uid: i32, pool: &web::Data<Pool>) -> Result<User, CustomError> {
-        let conn = pool.get().unwrap();
+        let conn = pool.get()?;
         let deleted_user = diesel::delete(users::table)
             .filter(users::id.eq(uid))
             .get_result(&conn)?;

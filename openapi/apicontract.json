@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Age aggregator",
-        "description": "A REST-ish CRUD API for the sake of learning",
+        "title": "Ages API",
+        "description": "A REST-ish CRUD API to store some names and birthdates",
         "version": "0.1.0"
     },
     "servers": [
@@ -14,7 +14,7 @@
     "paths": {
         "/auth/signup": {
             "post": {
-                "description": "Register a new user in the database",
+                "summary": "Register a new user in the database",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -26,21 +26,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Returns the registered user with id",
+                        "description": "Returns a success message",
                         "content": {
-                            "application/json": {
+                            "text/plain": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/FullUser"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
+                                    "$ref": "#/components/schemas/TextResponse"
                                 }
                             }
                         }
@@ -50,7 +40,7 @@
         },
         "/auth/login": {
             "post": {
-                "description": "Log a user to receive a JWT",
+                "summary": "Log a user to receive a JWT",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -70,64 +60,18 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
-                                }
-                            }
-                        }
                     }
                 }
             }
         },
         "/auth/update": {
             "put": {
-                "description": "Change the user's credentials, most probably the password",
+                "summary": "Change the user's credentials, most probably the password. Need a JWT.",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/FullUser"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Returns the updated user",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/FullUser"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/delete": {
-            "delete": {
-                "description": "Delete the user AND ALL THE ASSOCIATED DATA",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FullUser"
+                                "$ref": "#/components/schemas/User"
                             }
                         }
                     }
@@ -138,17 +82,24 @@
                         "content": {
                             "text/plain": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/textResponse"
+                                    "$ref": "#/components/schemas/TextResponse"
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    }
+                }
+            }
+        },
+        "/auth/delete": {
+            "delete": {
+                "summary": "Delete the user AND ALL THE ASSOCIATED DATA. Need a JWT only.",
+                "responses": {
+                    "200": {
+                        "description": "Returns a success message",
                         "content": {
-                            "application/json": {
+                            "text/plain": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
+                                    "$ref": "#/components/schemas/TextResponse"
                                 }
                             }
                         }
@@ -159,6 +110,13 @@
         "/persons": {
             "get": {
                 "summary": "Return the list of all registered persons",
+                "security": [
+                    {
+                        "something_to_write_here": [
+                            "#/components/securityScheme/bearerAuth"
+                        ]
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "A JSON array of persons",
@@ -172,21 +130,11 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
-                                }
-                            }
-                        }
                     }
                 }
             },
             "post": {
-                "description": "Post a Person to add to the user's family",
+                "summary": "Post a Person to add to the user's family",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -206,21 +154,11 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
-                                }
-                            }
-                        }
                     }
                 }
             },
             "put": {
-                "description": "Change an already registered person",
+                "summary": "Update a registered person",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -232,7 +170,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Returns the registered person",
+                        "description": "Returns the updated person",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -257,16 +195,6 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
-                                }
-                            }
-                        }
                     }
                 }
             },
@@ -274,23 +202,43 @@
                 "summary": "Delete the registered person",
                 "responses": {
                     "200": {
-                        "description": "The deleted person",
+                        "description": "A success message",
                         "content": {
-                            "application/json": {
+                            "text/plain": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/FullPerson"
+                                    "$ref": "#/components/schemas/TextResponse"
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "summary": "Ping the API",
+                "responses": {
+                    "200": {
+                        "description": "A pong message",
                         "content": {
-                            "application/json": {
+                            "text/plain": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorModel"
+                                    "$ref": "#/components/schemas/TextResponse"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/documentation": {
+            "get": {
+                "summary": "Get the OpenAPI contract",
+                "responses": {
+                    "200": {
+                        "description": "The JSON OpenAPI contract",
+                        "content": {
+                            "application/json": {}
                         }
                     }
                 }
@@ -337,7 +285,7 @@
             },
             "User": {
                 "title": "User",
-                "description": "A user as provided by the client for signup and login",
+                "description": "A user as provided by the client for signup, login and update",
                 "type": "object",
                 "properties": {
                     "username": {
@@ -349,20 +297,6 @@
                         "example": "my_awesome_password"
                     }
                 }
-            },
-            "FullUser": {
-                "title": "FullUser",
-                "description": "a full user with id",
-                "allOf": [
-                    { "$ref": "#/components/schemas/User" },
-                    { "$ref": "#/components/schemas/Identifier" }
-                ]
-            },
-            "textResponse": {
-                "title": "textResponse",
-                "description": "Plain text feedback",
-                "type": "string",
-                "example": "User does not exist"
             }
         }
     }

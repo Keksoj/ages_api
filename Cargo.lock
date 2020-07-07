@@ -314,6 +314,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "567b077b825e468cc974f0020d4082ee6e03132512f207ef1a02fd5d00d1f32d"
 
 [[package]]
+name = "ages_api"
+version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-files",
+ "actix-rt",
+ "actix-service",
+ "actix-web",
+ "bcrypt",
+ "chrono",
+ "derive_more",
+ "diesel",
+ "diesel_migrations",
+ "dotenv",
+ "env_logger",
+ "failure",
+ "futures",
+ "jsonwebtoken",
+ "lazy_static",
+ "listenfd",
+ "log",
+ "r2d2",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "uuid 0.8.1",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -377,35 +406,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
-]
-
-[[package]]
-name = "back"
-version = "0.1.0"
-dependencies = [
- "actix-cors",
- "actix-files",
- "actix-rt",
- "actix-service",
- "actix-web",
- "bcrypt",
- "chrono",
- "derive_more",
- "diesel",
- "diesel_migrations",
- "dotenv",
- "env_logger",
- "failure",
- "futures",
- "jsonwebtoken",
- "lazy_static",
- "listenfd",
- "log",
- "r2d2",
- "serde",
- "serde_derive",
- "serde_json",
- "uuid 0.8.1",
 ]
 
 [[package]]

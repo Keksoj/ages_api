@@ -102,7 +102,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json("We did not find an authentication header.")
+                            .body("We did not find an authentication header.")
                             .into_body(),
                     ))
                 });
@@ -116,7 +116,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json(
+                            .body(
                                 "The authorization header doesn't seem to be stringifyable"
                             )
                             .into_body(),
@@ -135,7 +135,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json("The authorization header doesn't start with 'bearer'")
+                        .body("The authorization header doesn't start with 'bearer'")
                         .into_body(),
                 ))
             });
@@ -151,7 +151,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json(format!("Could not decode the token: {}", decode_error))
+                            .body(format!("Could not decode the token: {}", decode_error))
                             .into_body(),
                     ))
                 });
@@ -167,7 +167,7 @@ where
                 return Box::pin(async move {
                     Ok(request.into_response(
                         HttpResponse::Unauthorized()
-                            .json("Could not connect to the database")
+                            .body("Could not connect to the database")
                             .into_body(),
                     ))
                 });
@@ -179,7 +179,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json("This user doesn't exist.")
+                        .body("This user doesn't exist.")
                         .into_body(),
                 ))
             });
@@ -198,7 +198,7 @@ where
             return Box::pin(async move {
                 Ok(request.into_response(
                     HttpResponse::Unauthorized()
-                        .json("The JWT token isn't valid anymore")
+                        .body("The JWT token isn't valid anymore")
                         .into_body(),
                 ))
             });
