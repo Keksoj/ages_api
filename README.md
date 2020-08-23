@@ -26,7 +26,19 @@ This work was made possible by:
 
 ## Data
 
-Besides the usual user data (username & hashed password), the API stores the user's family members as *persons* with a *name* and a *birthdate* in posix seconds.
+It looks like so:
+
+- user 
+  - id
+  - username
+  - password (hashed)
+- person
+  - id
+  - name
+  - birthdate in posix seconds
+  - id of the user who registered the person (foreign key)
+
+The nice thing with Diesel is that we write SQL that is then translated into Rust, not the other way around.
 
 ## CRUD operations
 
