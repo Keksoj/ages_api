@@ -18,7 +18,8 @@ pub fn migrate_and_config_db(db_url: &str) -> Pool {
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
-    embedded_migrations::run(&pool.get().expect("Failed to migrate."));
+    embedded_migrations::run(&pool.get().expect("Failed to migrate."))
+        .expect("The embedded migrations failed");
 
     pool
 }
