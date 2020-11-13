@@ -6,7 +6,7 @@ extern crate diesel_migrations;
 extern crate log;
 
 pub mod config;
-pub mod endpoints;
+pub mod controllers;
 pub mod jwt;
 pub mod middleware;
 pub mod models;

@@ -1,27 +1,27 @@
-use crate::{endpoints, toolbox};
+use crate::{controllers, toolbox};
 use actix_web::web::{delete, get, post, put, resource, scope, ServiceConfig};
 
 pub fn config_routes(cfg: &mut ServiceConfig) {
     info!("Configurating the routes...");
     cfg.service(
         scope("/auth")
-            .service(resource("/signup").route(post().to(endpoints::users::signup)))
-            .service(resource("/login").route(post().to(endpoints::users::login)))
-            .service(resource("/update").route(put().to(endpoints::users::update)))
-            .service(resource("/delete").route(delete().to(endpoints::users::delete))),
+            .service(resource("/signup").route(post().to(controllers::users::signup)))
+            .service(resource("/login").route(post().to(controllers::users::login)))
+            .service(resource("/update").route(put().to(controllers::users::update)))
+            .service(resource("/delete").route(delete().to(controllers::users::delete))),
     )
     .service(
         scope("/persons")
             .service(
                 resource("")
-                    .route(get().to(endpoints::persons::find_all))
-                    .route(post().to(endpoints::persons::create))
-                    .route(put().to(endpoints::persons::update)),
+                    .route(get().to(controllers::persons::find_all))
+                    .route(post().to(controllers::persons::create))
+                    .route(put().to(controllers::persons::update)),
             )
             .service(
                 resource("/{id}")
-                    .route(get().to(endpoints::persons::find))
-                    .route(delete().to(endpoints::persons::delete)),
+                    .route(get().to(controllers::persons::find))
+                    .route(delete().to(controllers::persons::delete)),
             ),
     )
     .service(scope("/ping").service(resource("").route(get().to(toolbox::ping::ping))));
