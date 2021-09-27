@@ -7,8 +7,6 @@ use std::net::SocketAddr;
 pub struct AppEnv {
     #[envconfig(from = "POSTGRESQL_ADDON_URI")]
     pub postgresql_uri: String,
-    #[envconfig(from = "POSTGRESQL_PASSWORD")]
-    pub postgresql_password: String,
     #[envconfig(from = "RUST_LOG")]
     pub log_level: Level,
     #[envconfig(from = "SOCKET_ADDRESS", default = "127.0.0.1:8080")]
@@ -18,7 +16,6 @@ pub struct AppEnv {
 #[derive(Clone, Debug)]
 pub struct AppConfig {
     pub postgresql_uri: String,
-    pub postgresql_password: String,
     pub log_level: Level,
     pub socket_address: SocketAddr,
     pub allowed_methods: Vec<Method>,
@@ -30,7 +27,6 @@ impl AppConfig {
 
         Ok(Self {
             postgresql_uri: app_env.postgresql_uri,
-            postgresql_password: app_env.postgresql_password,
             log_level: app_env.log_level,
             socket_address: app_env.socket_address.parse::<SocketAddr>()?,
             allowed_methods: vec![Method::GET, Method::POST, Method::PUT, Method::DELETE],
