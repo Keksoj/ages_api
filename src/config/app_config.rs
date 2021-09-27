@@ -7,7 +7,7 @@ use std::net::SocketAddr;
 pub struct AppEnv {
     #[envconfig(from = "POSTGRESQL_ADDON_URI")]
     pub postgresql_uri: String,
-    #[envconfig(from = "RUST_LOG")]
+    #[envconfig(from = "RUST_LOG", default = "debug")]
     pub log_level: Level,
     #[envconfig(from = "SOCKET_ADDRESS", default = "127.0.0.1:8080")]
     pub socket_address: String,
