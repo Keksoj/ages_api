@@ -16,11 +16,7 @@ pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub fn migrate_and_config_db(config: &AppConfig) -> anyhow::Result<Pool> {
     let pg_uri = config.get_pg_uri();
 
-    let postgres_connection = PgConnection::establish(&pg_uri)
-        .with_context(|| "Failed to create a connection to postgres")?;
-    info!("Successfully created a connection to {}", pg_uri);
-
-    info!("Create a connection manager");
+    info!("Create a connection manager to {}", pg_uri);
     let manager = ConnectionManager::<PgConnection>::new(pg_uri);
     info!("Create a connection pool");
     let pool = r2d2::Pool::builder()
@@ -35,5 +31,6 @@ pub fn migrate_and_config_db(config: &AppConfig) -> anyhow::Result<Pool> {
     )
     .with_context(|| "The embedded migrations failed")?;
 
+    debug!("Successfully ran the migrations");
     Ok(pool)
 }

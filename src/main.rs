@@ -13,23 +13,23 @@ pub mod models;
 pub mod schema;
 pub mod toolbox;
 
-use actix_files::Files;
 use actix_cors::Cors;
+use actix_files::Files;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
 use anyhow::Context;
-use config::{db::migrate_and_config_db, routes::config_routes, app_config::AppConfig};
+use config::{app_config::AppConfig, db::migrate_and_config_db, routes::config_routes};
 use dotenv::dotenv;
 use env_logger;
 use middleware::authentication::Authentication;
 // use std::env;
 
-
 #[actix_rt::main]
 async fn main() -> anyhow::Result<()> {
-    
-    dotenv().ok().with_context(|| "Failed to read the .env file.")?;
-    
+    dotenv()
+        .ok()
+        .with_context(|| "Failed to read the .env file.")?;
+
     let app_config = AppConfig::establish()?;
     debug!("Starting the app with this config: {:#?}", app_config);
     let cloned_config = app_config.clone();
@@ -53,9 +53,11 @@ async fn main() -> anyhow::Result<()> {
             .wrap(Logger::default())
             .wrap(Authentication)
             .configure(config_routes)
-            .service(Files::new("/documentation", "./openapi").index_file("apicontract.json"))
+            .service(
+                Files::new("/documentation", "./openapi").index_file("apicontract.json"),
+            )
     })
-    .bind("8080")?
+    .bind("localhost:8080")?
     .run()
     .await?;
     Ok(())
