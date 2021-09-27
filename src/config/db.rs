@@ -3,7 +3,7 @@ use anyhow::Context;
 use diesel::{
     pg::PgConnection,
     r2d2::{self, ConnectionManager},
-    Connection,
+    // Connection,
 };
 
 use diesel_migrations::embed_migrations;
@@ -14,7 +14,7 @@ pub type DbConnection = PgConnection;
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 pub fn migrate_and_config_db(config: &AppConfig) -> anyhow::Result<Pool> {
-    let pg_uri = config.get_pg_uri();
+    let pg_uri = &config.postgresql_uri;
 
     info!("Create a connection manager to {}", pg_uri);
     let manager = ConnectionManager::<PgConnection>::new(pg_uri);

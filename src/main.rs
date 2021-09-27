@@ -17,24 +17,20 @@ use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
-use anyhow::Context;
 use config::{app_config::AppConfig, db::migrate_and_config_db, routes::config_routes};
-use dotenv::dotenv;
 use env_logger;
 use middleware::authentication::Authentication;
-// use std::env;
 
 #[actix_rt::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv()
-        .ok()
-        .with_context(|| "Failed to read the .env file.")?;
-
+    
     let app_config = AppConfig::establish()?;
     debug!("Starting the app with this config: {:#?}", app_config);
     let cloned_config = app_config.clone();
-
+    
+    std::env::set_var("RUST_LOG", app_config.log_level.to_string());
     env_logger::init();
+    
 
     let pool = migrate_and_config_db(&app_config)?;
 
@@ -45,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
                     .send_wildcard()
                     .allowed_origin("*")
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
-                    .allowed_methods(&cloned_config.get_allowed_methods())
+                    .allowed_methods(&cloned_config.allowed_methods)
                     .allowed_header(header::CONTENT_TYPE)
                     .finish(),
             )
@@ -57,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
                 Files::new("/documentation", "./openapi").index_file("apicontract.json"),
             )
     })
-    .bind("localhost:8080")?
+    .bind(&app_config.socket_address)?
     .run()
     .await?;
     Ok(())
