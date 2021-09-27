@@ -1,4 +1,4 @@
-// use crate::toolbox::errors::CustomError;
+use crate::config::app_config::AppConfig;
 // use actix_web::web;
 use diesel::{
     pg::PgConnection,
@@ -12,9 +12,9 @@ embed_migrations!();
 pub type DbConnection = PgConnection;
 pub type Pool = r2d2::Pool<ConnectionManager<DbConnection>>;
 
-pub fn migrate_and_config_db(db_url: &str) -> Pool {
+pub fn migrate_and_config_db(config: &AppConfig) -> Pool {
     info!("Migrating and configurating database...");
-    let manager = ConnectionManager::<DbConnection>::new(db_url);
+    let manager = ConnectionManager::<DbConnection>::new(config.get_pg_uri());
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
