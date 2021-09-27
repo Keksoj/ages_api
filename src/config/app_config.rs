@@ -1,16 +1,19 @@
 use actix_web::http::Method;
 use envconfig::Envconfig;
+use log::Level;
 use std::env;
 
-#[derive(Clone, Envconfig)]
+#[derive(Clone, Envconfig, Debug)]
 pub struct AppEnv {
     #[envconfig(from = "POSTGRESQL_ADDON_URI")]
     pub postgresql_uri: String,
     #[envconfig(from = "POSTGRESQL_PASSWORD")]
     pub postgresql_password: String,
+    #[envconfig(from = "RUST_LOG")]
+    pub log_level: Level,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppConfig {
     pub app_env: AppEnv,
     pub allowed_methods: Vec<Method>,

@@ -17,6 +17,7 @@ use actix_files::Files;
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
+use anyhow::Context;
 use config::{db::migrate_and_config_db, routes::config_routes, app_config::AppConfig};
 use dotenv::dotenv;
 use env_logger;
@@ -27,14 +28,15 @@ use middleware::authentication::Authentication;
 #[actix_rt::main]
 async fn main() -> anyhow::Result<()> {
     
-    dotenv().ok().expect("Failed to read the .env file.");
+    dotenv().ok().with_context(|| "Failed to read the .env file.")?;
     
     let app_config = AppConfig::establish()?;
+    debug!("Starting the app with this config: {:#?}", app_config);
     let cloned_config = app_config.clone();
 
     env_logger::init();
 
-    let pool = migrate_and_config_db(&app_config);
+    let pool = migrate_and_config_db(&app_config)?;
 
     HttpServer::new(move || {
         App::new()

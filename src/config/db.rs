@@ -1,8 +1,9 @@
 use crate::config::app_config::AppConfig;
-// use actix_web::web;
+use anyhow::Context;
 use diesel::{
     pg::PgConnection,
     r2d2::{self, ConnectionManager},
+    Connection,
 };
 
 use diesel_migrations::embed_migrations;
@@ -10,16 +11,29 @@ use diesel_migrations::embed_migrations;
 embed_migrations!();
 
 pub type DbConnection = PgConnection;
-pub type Pool = r2d2::Pool<ConnectionManager<DbConnection>>;
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
-pub fn migrate_and_config_db(config: &AppConfig) -> Pool {
-    info!("Migrating and configurating database...");
-    let manager = ConnectionManager::<DbConnection>::new(config.get_pg_uri());
+pub fn migrate_and_config_db(config: &AppConfig) -> anyhow::Result<Pool> {
+    let pg_uri = config.get_pg_uri();
+
+    let postgres_connection = PgConnection::establish(&pg_uri)
+        .with_context(|| "Failed to create a connection to postgres")?;
+    info!("Successfully created a connection to {}", pg_uri);
+
+    info!("Create a connection manager");
+    let manager = ConnectionManager::<PgConnection>::new(pg_uri);
+    info!("Create a connection pool");
     let pool = r2d2::Pool::builder()
         .build(manager)
-        .expect("Failed to create pool.");
-    embedded_migrations::run(&pool.get().expect("Failed to migrate."))
-        .expect("The embedded migrations failed");
+        .with_context(|| "Failed to create pool.")?;
 
-    pool
+    info!("Migrating...");
+    embedded_migrations::run(
+        &pool
+            .get()
+            .with_context(|| "Failed to retrieve a connection to the pool.")?,
+    )
+    .with_context(|| "The embedded migrations failed")?;
+
+    Ok(pool)
 }
