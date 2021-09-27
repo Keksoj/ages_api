@@ -9,8 +9,10 @@ pub struct AppEnv {
     pub postgresql_uri: String,
     #[envconfig(from = "RUST_LOG", default = "debug")]
     pub log_level: Level,
-    #[envconfig(from = "SOCKET_ADDRESS", default = "127.0.0.1:8080")]
+    #[envconfig(from = "SOCKET_ADDRESS", default = "0.0.0.0:8080")]
     pub socket_address: String,
+    #[envconfig(from = "MAX_CONNECTIONS", default = "5")]
+    pub max_connections: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -19,6 +21,7 @@ pub struct AppConfig {
     pub log_level: Level,
     pub socket_address: SocketAddr,
     pub allowed_methods: Vec<Method>,
+    pub max_connections: u32,
 }
 
 impl AppConfig {
@@ -30,6 +33,7 @@ impl AppConfig {
             log_level: app_env.log_level,
             socket_address: app_env.socket_address.parse::<SocketAddr>()?,
             allowed_methods: vec![Method::GET, Method::POST, Method::PUT, Method::DELETE],
+            max_connections: app_env.max_connections,
         })
     }
 }

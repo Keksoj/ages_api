@@ -20,6 +20,7 @@ pub fn migrate_and_config_db(config: &AppConfig) -> anyhow::Result<Pool> {
     let manager = ConnectionManager::<PgConnection>::new(pg_uri);
     info!("Create a connection pool");
     let pool = r2d2::Pool::builder()
+        .max_size(config.max_connections)
         .build(manager)
         .with_context(|| "Failed to create pool.")?;
 
