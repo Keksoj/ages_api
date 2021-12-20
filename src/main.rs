@@ -18,7 +18,7 @@ use actix_files::Files;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
 use anyhow::Context;
-use config::{app_env::AppEnv, db::migrate_and_config_db, routes::config_routes};
+use config::{db::migrate_and_config_db, routes::config_routes, Config};
 use dotenv::dotenv;
 use env_logger;
 use middleware::authentication::Authentication;
@@ -28,12 +28,13 @@ use middleware::authentication::Authentication;
 async fn main() -> anyhow::Result<()> {
     let _path_buffer = dotenv().context("Failed to read the .env file.")?;
 
-    let app_env = AppEnv::establish()?;
-    let cloned_env = app_env.clone();
+    let config = Config::get_from_env()
+        .context("Could not get app config from the environment")?;
+    let cloned_config = config.clone();
 
     env_logger::init();
 
-    let pool = migrate_and_config_db(&app_env.database_url)
+    let pool = migrate_and_config_db(&config.database_url)
         .context("Failed to migrate and configure database")?;
 
     HttpServer::new(move || {
@@ -41,9 +42,9 @@ async fn main() -> anyhow::Result<()> {
             .wrap(
                 Cors::new()
                     .send_wildcard()
-                    .allowed_origin(&cloned_env.allowed_origin)
+                    .allowed_origin(&cloned_config.allowed_origin)
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
-                    .allowed_methods(&cloned_env.allowed_methods)
+                    .allowed_methods(&cloned_config.allowed_methods)
                     .allowed_header(header::CONTENT_TYPE)
                     .finish(),
             )
@@ -55,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
                 Files::new("/documentation", "./openapi").index_file("apicontract.json"),
             )
     })
-    .bind(&app_env.bind_url)?
+    .bind(&config.bind_url)?
     .run()
     .await?;
 
