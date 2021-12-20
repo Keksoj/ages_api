@@ -1,3 +1,4 @@
+use anyhow::Context;
 use std::env;
 use actix_web::http::Method;
 
@@ -10,15 +11,15 @@ pub struct AppEnv {
 }
 
 impl AppEnv {
-    pub fn establish() -> Self {
-        let host = env::var("HOST").expect("a HOST is not provided in the environment");
-        let port = env::var("PORT").expect("a PORT is not provided in the environment");
+    pub fn establish() -> anyhow::Result<Self> {
+        let host = env::var("HOST").context("a HOST is not provided in the environment")?;
+        let port = env::var("PORT").context("a PORT is not provided in the environment")?;
         let bind_url = format!("{}:{}", host, port).to_string();
         
-        let database_url = env::var("DATABASE_URL").expect("Database url not set in env");
+        let database_url = env::var("DATABASE_URL").context("Database url not set in env")?;
         
         let allowed_origin =
-            env::var("ALLOWED_ORIGIN").expect("allowed origin not set in env");
+            env::var("ALLOWED_ORIGIN").context("allowed origin not set in env")?;
 
         let allowed_methods = vec![
             Method::GET,
@@ -27,11 +28,11 @@ impl AppEnv {
             Method::DELETE,
         ];
 
-        Self {
+        Ok(Self {
             database_url,
             bind_url,
             allowed_origin,
             allowed_methods,
-        }
+        })
     }
 }

@@ -22,15 +22,14 @@ use dotenv::dotenv;
 use env_logger;
 use middleware::authentication::Authentication;
 // use std::env;
-use std::io::Result;
 
 
 #[actix_rt::main]
-async fn main() -> Result<()> {
+async fn main() -> anyhow::Result<()> {
     
     dotenv().ok().expect("Failed to read the .env file.");
     
-    let app_env = AppEnv::establish();
+    let app_env = AppEnv::establish()?;
     let cloned_env = app_env.clone();
 
     env_logger::init();
@@ -56,5 +55,7 @@ async fn main() -> Result<()> {
     })
     .bind(&app_env.bind_url)?
     .run()
-    .await
+    .await?;
+
+    Ok(())
 }
