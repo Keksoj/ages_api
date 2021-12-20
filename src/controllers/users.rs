@@ -1,6 +1,6 @@
 use crate::{
     config::db::Pool,
-    jwt::UserToken,
+    jwt::generate_token_response,
     models::{
         person::Person,
         user::{ReceivedUser, User},
@@ -30,7 +30,7 @@ pub async fn login(
     let received_login = json_login.0;
 
     let logged_user = User::login(&received_login, &pool)?;
-    let json_token_response = UserToken::generate_token_response(&logged_user)?;
+    let json_token_response = generate_token_response(&logged_user)?;
     Ok(HttpResponse::Ok().json(json_token_response))
 }
 

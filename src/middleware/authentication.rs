@@ -144,7 +144,7 @@ where
         let raw_token = str_authen_header[6..str_authen_header.len()].trim();
 
         debug!("Decoding the token");
-        let token = match UserToken::decode_token(raw_token.to_string()) {
+        let token = match UserToken::decode_from_string(raw_token.to_string()) {
             Ok(decoded_data) => decoded_data,
             Err(decode_error) => {
                 return Box::pin(async move {

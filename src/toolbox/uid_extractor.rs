@@ -20,7 +20,7 @@ pub fn get_uid_from_request(request: &HttpRequest) -> Result<i32, CustomError> {
         ));
     }
     let raw_token = authen_str[6..authen_str.len()].trim();
-    let token = UserToken::decode_token(raw_token.to_string())?;
+    let token = UserToken::decode_from_string(raw_token.to_string())?;
     let uid = token.uid;
     Ok(uid)
 }
