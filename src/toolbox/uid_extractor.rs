@@ -1,4 +1,4 @@
-use crate::{jwt::user_token::UserToken, toolbox::errors::CustomError};
+use crate::{jwt::UserToken, toolbox::errors::CustomError};
 use actix_web::HttpRequest;
 
 // ideally this should be done by a middleware and written in the app state

@@ -1,6 +1,6 @@
 use crate::{
     config::db::Pool,
-    jwt::user_token::UserToken,
+    jwt::UserToken,
     models::{
         person::Person,
         user::{ReceivedUser, User},

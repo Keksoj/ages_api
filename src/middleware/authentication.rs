@@ -1,9 +1,8 @@
 use crate::{
     config::db::Pool,
     config::routes,
-    jwt::user_token::UserToken,
+    jwt::UserToken,
     models::user::User,
-    // ::{decode_token, verify_token},
 };
 use actix_service::{Service, Transform};
 

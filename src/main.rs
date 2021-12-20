@@ -22,7 +22,6 @@ use config::{db::migrate_and_config_db, routes::config_routes, Config};
 use dotenv::dotenv;
 use env_logger;
 use middleware::authentication::Authentication;
-// use std::env;
 
 #[actix_rt::main]
 async fn main() -> anyhow::Result<()> {
